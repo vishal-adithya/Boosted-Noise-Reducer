@@ -5,6 +5,7 @@ import xgboost as xgb
 import matplotlib.pyplot as plt
 from sklearn.metrics import mean_squared_error
 from sklearn.model_selection import train_test_split
+from sklearn.model_selection import RandomizedSearchCV
 
 import warnings
 warnings.filterwarnings("ignore")
@@ -106,9 +107,21 @@ y_stack = np.hstack(y)
 X_train,X_test,y_train,y_test = train_test_split(X_stack,y_stack,test_size=0.2,random_state=5)
 
 
-model = xgb.XGBRegressor(objective="reg:squarederror",device = "gpu",n_estimators = 100,verbose = True)
-model.fit(X_train,y_train)
+est = xgb.XGBRegressor(objective="reg:squarederror",device = "gpu")
 
-y_pred = model.predict(X_test)
-mse = mean_squared_error(y_test, y_pred)
-print(f"MSE: {mse}")
+param_grid = {
+    "learning_rate": [0.01,0.1,0.2],
+    "max_depth": [3,5,7],
+    "subsample":[0.5,0.6,0.7],
+    "colsample_bytree":[0.5,0.7,0.9],
+    "lambda":[0,0.2,0.4],
+    "alpha":[0,0.2,0.4]
+    }
+
+rsv = RandomizedSearchCV(est, param_grid,verbose=1,n_jobs=1)
+
+rsv.fit(X_train,y_train)
+
+# y_pred = model.predict(X_test)
+# mse = mean_squared_error(y_test, y_pred)
+# print(f"MSE: {mse}")
